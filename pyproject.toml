@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rdtii-tool"
+version = "0.1.0"
+description = "RDTII regulatory intelligence tool for Singapore, Australia, and Malaysia."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "beautifulsoup4>=4.12,<5.0",
+    "openai>=1.0,<2.0",
+    "pydantic>=2.0,<3.0",
+    "PyYAML>=6.0,<7.0",
+    "pypdf>=5.0,<6.0",
+    "rank-bm25>=0.2,<1.0",
+    "requests>=2.32,<3.0",
+]
+
+[project.optional-dependencies]
+pdf = [
+    "docling==2.112.0",
+]
+
+[project.scripts]
+rdtii-tool = "rdtii_tool.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+rdtii_tool = ["demo_fixtures/*.json"]

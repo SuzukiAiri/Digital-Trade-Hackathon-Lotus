@@ -1,0 +1,245 @@
+schema_version: "1.0"
+framework: RDTII 2.1
+scope:
+  - pillar_id: P6
+    name: Cross-border data policies
+  - pillar_id: P7
+    name: Domestic data protection and privacy
+
+indicators:
+  - pillar_id: P6
+    indicator_id: P6-I1
+    name: Ban on cross-border data transfers or local processing requirement
+    short_definition: Identifies outright transfer bans or requirements that covered data be processed domestically.
+    positive_keywords:
+      - prohibited from transferring
+      - shall not transfer outside Singapore
+      - must be processed in Singapore
+      - local processing
+      - transfer ban
+    negative_keywords:
+      - comparable standard of protection
+      - legally enforceable obligations
+      - consent to overseas transfer
+      - transfer permitted if
+      - prescribed exceptions
+    mapping_notes: >-
+      Map only an express prohibition on cross-border transfer or a requirement to
+      process covered data domestically. Conditional cross-border transfer rules
+      should not be automatically treated as a ban or local processing requirement;
+      assess those rules under P6-I4 instead.
+    common_false_positives:
+      - Accountability conditions for permitted overseas transfers
+      - Requirements to ensure comparable protection abroad
+      - Sectoral notification or approval procedures that do not prohibit transfer
+
+  - pillar_id: P6
+    indicator_id: P6-I2
+    name: Local storage requirement
+    short_definition: Identifies requirements to store or retain a copy of covered data on infrastructure located in Singapore.
+    positive_keywords:
+      - stored in Singapore
+      - maintain a copy in Singapore
+      - local copy
+      - data localisation
+      - domestic storage
+    negative_keywords:
+      - accessible from Singapore
+      - retention period
+      - backup location recommended
+      - comparable protection
+    mapping_notes: >-
+      Require a geographic storage obligation. Distinguish local storage from
+      minimum retention duration under P7-I3 and from local processing under P6-I1.
+    common_false_positives:
+      - General record-retention duties with no location condition
+      - Business-continuity recommendations
+      - Requirements that records merely be accessible to a Singapore authority
+
+  - pillar_id: P6
+    indicator_id: P6-I3
+    name: Local data infrastructure requirement
+    short_definition: Identifies requirements to use locally located computing facilities, servers, or other data infrastructure.
+    positive_keywords:
+      - computing facilities in Singapore
+      - local server
+      - domestic data centre
+      - use facilities located in Singapore
+      - local infrastructure
+    negative_keywords:
+      - office in Singapore
+      - local representative
+      - service availability
+      - disaster recovery plan
+    mapping_notes: >-
+      Map obligations concerning the location or use of computing infrastructure,
+      rather than corporate presence, licensing, or general resilience controls.
+    common_false_positives:
+      - Local incorporation or representative requirements
+      - Recommended domestic disaster-recovery capacity
+      - Technical standards that do not prescribe infrastructure location
+
+  - pillar_id: P6
+    indicator_id: P6-I4
+    name: Conditional cross-border data flow regime
+    short_definition: Identifies legal conditions, safeguards, approvals, or accountability duties attached to otherwise permitted cross-border data transfers.
+    positive_keywords:
+      - comparable standard of protection
+      - legally enforceable obligations
+      - transfer limitation obligation
+      - binding corporate rules
+      - overseas recipient
+      - consent for transfer
+    negative_keywords:
+      - shall not transfer under any circumstances
+      - must be processed in Singapore
+      - stored only in Singapore
+    mapping_notes: >-
+      Map conditions that govern a permitted transfer, including safeguards,
+      contracts, consent, adequacy, exemptions, or regulatory approval. Do not
+      conflate conditional transfer governance with an outright P6-I1 ban.
+    common_false_positives:
+      - Domestic disclosure rules unrelated to overseas transfers
+      - Voluntary privacy certifications
+      - Purely informational notices with no transfer condition
+
+  - pillar_id: P6
+    indicator_id: P6-I5
+    name: Binding international commitments on cross-border data flows
+    short_definition: Identifies whether binding trade or international commitments support cross-border data flows and constrain unjustified localization.
+    positive_keywords:
+      - cross-border transfer of information by electronic means
+      - shall allow cross-border data flows
+      - location of computing facilities
+      - digital economy agreement
+      - binding international commitment
+    negative_keywords:
+      - memorandum of understanding
+      - non-binding cooperation
+      - policy aspiration
+      - negotiations ongoing
+    mapping_notes: >-
+      Record in-force, binding international commitments applicable to Singapore.
+      Note material exceptions and scope limitations in the evidence rationale.
+    common_false_positives:
+      - Non-binding declarations or cooperation memoranda
+      - Signed but not yet effective agreements
+      - General trade commitments with no data-flow provision
+
+  - pillar_id: P7
+    indicator_id: P7-I1
+    name: Comprehensive data protection legal framework
+    short_definition: Identifies a generally applicable legal framework governing personal-data protection and privacy.
+    positive_keywords:
+      - personal data protection
+      - collection use and disclosure
+      - access and correction
+      - protection obligation
+      - data subject
+    negative_keywords:
+      - internal privacy policy
+      - voluntary code
+      - public sector only
+      - sector-specific confidentiality only
+    mapping_notes: >-
+      Assess whether binding legislation provides a comprehensive, generally
+      applicable personal-data protection framework, while documenting exclusions.
+    common_false_positives:
+      - Voluntary privacy programmes
+      - Confidentiality rules confined to one profession
+      - Government-only information management policies
+
+  - pillar_id: P7
+    indicator_id: P7-I2
+    name: Dedicated cybersecurity legal framework
+    short_definition: Identifies binding legislation dedicated to cybersecurity, cybercrime, or protection of critical information infrastructure.
+    positive_keywords:
+      - cybersecurity act
+      - critical information infrastructure
+      - cyber incident
+      - computer misuse
+      - unauthorized access
+    negative_keywords:
+      - information security policy
+      - voluntary framework
+      - guidance only
+      - physical security
+    mapping_notes: >-
+      Map dedicated binding legal frameworks and distinguish their scope, including
+      cybersecurity governance, cybercrime, and critical-infrastructure duties.
+    common_false_positives:
+      - Non-binding security guidance
+      - General corporate risk-management duties
+      - Physical safety requirements with no cybersecurity component
+
+  - pillar_id: P7
+    indicator_id: P7-I3
+    name: Minimum period of data retention requirement
+    short_definition: Identifies binding duties to retain specified commercial or communications data for at least a defined period.
+    positive_keywords:
+      - retain for at least
+      - minimum retention period
+      - keep for a period of
+      - preserve for not less than
+      - retain for 5 years
+    negative_keywords:
+      - not kept longer than necessary
+      - cease to retain
+      - no longer serves the purpose
+      - maximum retention period
+    mapping_notes: >-
+      Map only a mandatory minimum duration, including a permanent-retention
+      obligation. "Not kept longer than necessary" is a retention-limitation
+      principle, not a minimum retention requirement, and must not be mapped as
+      positive evidence for P7-I3.
+    common_false_positives:
+      - Maximum retention limits
+      - Duties to delete or anonymize data when no longer needed
+      - Records that may be retained without a prescribed minimum duration
+
+  - pillar_id: P7
+    indicator_id: P7-I4
+    name: Data protection officer or impact assessment requirement
+    short_definition: Identifies binding duties to appoint a data protection officer or conduct a data protection impact assessment.
+    positive_keywords:
+      - data protection officer
+      - designate one or more individuals
+      - data protection impact assessment
+      - DPIA
+      - privacy impact assessment
+    negative_keywords:
+      - may appoint
+      - recommended officer
+      - voluntary assessment
+      - security risk assessment only
+    mapping_notes: >-
+      Record whether the rule mandates a DPO, a DPIA, or both, and capture thresholds,
+      exemptions, and sectoral scope in the rationale.
+    common_false_positives:
+      - Voluntary appointment recommendations
+      - Cybersecurity assessments with no personal-data focus
+      - Generic responsibility assigned without a DPO obligation
+
+  - pillar_id: P7
+    indicator_id: P7-I5
+    name: Government access to personal data without independent judicial authorization
+    short_definition: Identifies powers requiring access to personal data without prior authorization from an independent judicial body or equivalent tribunal.
+    positive_keywords:
+      - provide information upon request
+      - disclose to the authority
+      - access without warrant
+      - authorized officer may require
+      - interception without court order
+    negative_keywords:
+      - judicial warrant
+      - court order required
+      - independent tribunal
+      - with judicial authorization
+      - consent of the Public Prosecutor
+    mapping_notes: >-
+      Map powers only after checking who authorizes access, what due-process
+      safeguards apply, and whether the authorizing body is independent and judicial.
+    common_false_positives:
+      - Access based on a court-issued warrant
+      - Voluntary disclosure by a data subject
+      - Aggregate or anonymized reporting duties

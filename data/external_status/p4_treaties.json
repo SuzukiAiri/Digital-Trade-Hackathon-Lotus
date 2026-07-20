@@ -1,0 +1,114 @@
+{
+  "registry_version": "rdtii-p4-treaty-registry-v1",
+  "source_policy": "WIPO official treaty status only",
+  "records": [
+    {
+      "economy": "Singapore",
+      "indicator_id": "P4-I4",
+      "instrument": "Patent Cooperation Treaty",
+      "status": "party",
+      "accession_or_ratification_date": "1994-11-23",
+      "effective_date": "1995-02-23",
+      "official_source_url": "https://www.wipo.int/pct/en/pct_contracting_states.html",
+      "last_checked": "2026-07-20",
+      "source_note": "WIPO PCT contracting-state status.",
+      "status_text": "The Patent Cooperation Treaty is in force for Singapore."
+    },
+    {
+      "economy": "Australia",
+      "indicator_id": "P4-I4",
+      "instrument": "Patent Cooperation Treaty",
+      "status": "party",
+      "accession_or_ratification_date": "1979-12-31",
+      "effective_date": "1980-03-31",
+      "official_source_url": "https://www.wipo.int/pct/en/pct_contracting_states.html",
+      "last_checked": "2026-07-20",
+      "source_note": "WIPO PCT contracting-state status.",
+      "status_text": "The Patent Cooperation Treaty is in force for Australia."
+    },
+    {
+      "economy": "Malaysia",
+      "indicator_id": "P4-I4",
+      "instrument": "Patent Cooperation Treaty",
+      "status": "party",
+      "accession_or_ratification_date": "2006-05-16",
+      "effective_date": "2006-08-16",
+      "official_source_url": "https://www.wipo.int/pct/en/pct_contracting_states.html",
+      "last_checked": "2026-07-20",
+      "source_note": "WIPO PCT contracting-state status.",
+      "status_text": "The Patent Cooperation Treaty is in force for Malaysia."
+    },
+    {
+      "economy": "Singapore",
+      "indicator_id": "P4-I7",
+      "instrument": "WIPO Copyright Treaty",
+      "status": "party",
+      "accession_or_ratification_date": "2005-01-17",
+      "effective_date": "2005-04-17",
+      "official_source_url": "https://www.wipo.int/treaties/en/ShowResults.jsp?treaty_id=16",
+      "last_checked": "2026-07-20",
+      "source_note": "WIPO WCT contracting-party status.",
+      "status_text": "The WIPO Copyright Treaty is in force for Singapore."
+    },
+    {
+      "economy": "Australia",
+      "indicator_id": "P4-I7",
+      "instrument": "WIPO Copyright Treaty",
+      "status": "party",
+      "accession_or_ratification_date": "2007-04-26",
+      "effective_date": "2007-07-26",
+      "official_source_url": "https://www.wipo.int/treaties/en/ShowResults.jsp?treaty_id=16",
+      "last_checked": "2026-07-20",
+      "source_note": "WIPO WCT contracting-party status.",
+      "status_text": "The WIPO Copyright Treaty is in force for Australia."
+    },
+    {
+      "economy": "Malaysia",
+      "indicator_id": "P4-I7",
+      "instrument": "WIPO Copyright Treaty",
+      "status": "party",
+      "accession_or_ratification_date": "2012-09-27",
+      "effective_date": "2012-12-27",
+      "official_source_url": "https://www.wipo.int/treaties/en/ShowResults.jsp?treaty_id=16",
+      "last_checked": "2026-07-20",
+      "source_note": "WIPO WCT contracting-party status.",
+      "status_text": "The WIPO Copyright Treaty is in force for Malaysia."
+    },
+    {
+      "economy": "Singapore",
+      "indicator_id": "P4-I8",
+      "instrument": "WIPO Performances and Phonograms Treaty",
+      "status": "party",
+      "accession_or_ratification_date": "2005-01-17",
+      "effective_date": "2005-04-17",
+      "official_source_url": "https://www.wipo.int/treaties/en/ShowResults.jsp?treaty_id=20",
+      "last_checked": "2026-07-20",
+      "source_note": "WIPO WPPT contracting-party status.",
+      "status_text": "The WIPO Performances and Phonograms Treaty is in force for Singapore."
+    },
+    {
+      "economy": "Australia",
+      "indicator_id": "P4-I8",
+      "instrument": "WIPO Performances and Phonograms Treaty",
+      "status": "party",
+      "accession_or_ratification_date": "2007-04-26",
+      "effective_date": "2007-07-26",
+      "official_source_url": "https://www.wipo.int/treaties/en/ShowResults.jsp?treaty_id=20",
+      "last_checked": "2026-07-20",
+      "source_note": "WIPO WPPT contracting-party status.",
+      "status_text": "The WIPO Performances and Phonograms Treaty is in force for Australia."
+    },
+    {
+      "economy": "Malaysia",
+      "indicator_id": "P4-I8",
+      "instrument": "WIPO Performances and Phonograms Treaty",
+      "status": "party",
+      "accession_or_ratification_date": "2012-09-27",
+      "effective_date": "2012-12-27",
+      "official_source_url": "https://www.wipo.int/treaties/en/ShowResults.jsp?treaty_id=20",
+      "last_checked": "2026-07-20",
+      "source_note": "WIPO WPPT contracting-party status.",
+      "status_text": "The WIPO Performances and Phonograms Treaty is in force for Malaysia."
+    }
+  ]
+}

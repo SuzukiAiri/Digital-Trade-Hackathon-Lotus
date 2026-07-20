@@ -1,0 +1,26 @@
+{
+  "outputs/corpus/australia/final_submit/australia_p4_p6_p7.csv": {
+    "sha256": "4aebafcf8408d18ce73b6334c360666495309fd417ec1d5ae8f18a485c1fac37",
+    "size": 365059
+  },
+  "outputs/corpus/australia/final_submit/australia_p4_p6_p7.json": {
+    "sha256": "a751151425320fb170ebbee3fada4c3542861d5ee83eed7b6e922d2f705976a7",
+    "size": 438932
+  },
+  "outputs/corpus/malaysia/final_submit/malaysia_p4_p6_p7.csv": {
+    "sha256": "907328a3709eae817fd019cad5d2124ecc672e9e45312a9c10d180f7ac25966c",
+    "size": 79583
+  },
+  "outputs/corpus/malaysia/final_submit/malaysia_p4_p6_p7.json": {
+    "sha256": "04fff80b5d6c3c20dacef4892fbe37f6215ded0edf6add5f80e8cf0543642620",
+    "size": 115871
+  },
+  "outputs/corpus/singapore/final_submit/singapore_p4_p6_p7.csv": {
+    "sha256": "40ba7745af7b266011f69879897e4174434ef6c12511e2820fab433ec1d175ce",
+    "size": 406682
+  },
+  "outputs/corpus/singapore/final_submit/singapore_p4_p6_p7.json": {
+    "sha256": "7eea0ce6f4bf727e6bbf61fefe41fd26f3269ecad29e4ab59dfd573bbd850704",
+    "size": 502240
+  }
+}

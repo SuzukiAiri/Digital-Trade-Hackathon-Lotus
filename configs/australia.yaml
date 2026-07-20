@@ -1,0 +1,64 @@
+schema_version: "1.0"
+country:
+  code: AU
+  name: Australia
+  economy: Australia
+
+sources:
+  - name: Australian Federal Register of Legislation
+    country: AU
+    base_url: https://www.legislation.gov.au/
+    source_type: legislation
+    source_category: official_legislation_portal
+    priority: 1
+    official_status: official
+    expected_source_types:
+      - act
+      - legislative_instrument
+    mvp_enabled: true
+    portal_code: australia_frl
+    jurisdiction: Commonwealth of Australia
+    authority: Office of Parliamentary Counsel
+    notes: Primary Commonwealth source for Acts and legislative instruments.
+
+  - name: OAIC
+    country: AU
+    base_url: https://www.oaic.gov.au/
+    source_type: official_regulatory_guidance
+    source_category: privacy_regulator_guidance
+    priority: 2
+    official_status: official
+    expected_source_types:
+      - regulatory_guidance
+    mvp_enabled: true
+    legally_binding: false
+    primary_legislation: false
+    usable_for_interpretation: true
+    usable_as_legal_basis: false
+    notes: Official privacy guidance; not treated as binding legal basis for mapping unless methodology later allows it.
+
+  - name: Department of Home Affairs
+    country: AU
+    base_url: https://www.homeaffairs.gov.au/
+    source_type: government_strategy
+    source_category: cybersecurity_policy
+    priority: 3
+    official_status: official
+    expected_source_types:
+      - government_strategy
+    mvp_enabled: true
+    legally_binding: false
+    do_not_treat_as_statutory_obligation: true
+    notes: Cyber security strategy source only; statutory obligations come from FRL legal texts.
+
+  - name: DFAT
+    country: AU
+    base_url: https://www.dfat.gov.au/trade/agreements/trade-agreements
+    source_type: official_treaty_status_seed
+    source_category: international_agreements
+    priority: 4
+    official_status: official
+    expected_source_types:
+      - treaty_status
+    mvp_enabled: true
+    notes: Treaty status URL seeds for later P6-I5 processing.

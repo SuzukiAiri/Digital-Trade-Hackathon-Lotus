@@ -1,0 +1,347 @@
+﻿schema_version: "1.0"
+country:
+  code: SG
+  name: Singapore
+  economy: Singapore
+
+sources:
+  - name: Singapore Statutes Online
+    country: SG
+    base_url: https://sso.agc.gov.sg/
+    source_type: legislation
+    source_category: official_legislation_portal
+    priority: 1
+    official_status: official
+    expected_source_types:
+      - act
+      - subsidiary_legislation
+    mvp_enabled: true
+    notes: Primary source for Acts and Subsidiary Legislation.
+
+  - name: PDPC
+    country: SG
+    base_url: https://www.pdpc.gov.sg/
+    source_type: regulator_material
+    source_category: regulator_guidance
+    priority: 2
+    official_status: official
+    expected_source_types:
+      - advisory_guideline
+      - explanatory_material
+      - enforcement_decision
+    mvp_enabled: true
+    notes: Personal Data Protection Commission guidance and explanatory materials.
+
+  - name: CSA
+    country: SG
+    base_url: https://www.csa.gov.sg/
+    source_type: regulator_material
+    source_category: cybersecurity_regulator
+    priority: 3
+    official_status: official
+    expected_source_types:
+      - regulatory_guidance
+      - code_of_practice
+      - explanatory_material
+    mvp_enabled: true
+    notes: Cyber Security Agency of Singapore materials.
+
+  - name: MAS
+    country: SG
+    base_url: https://www.mas.gov.sg/
+    source_type: regulator_material
+    source_category: financial_sector_regulator
+    priority: 3
+    official_status: official
+    expected_source_types:
+      - notice
+      - guideline
+      - circular
+      - explanatory_material
+    mvp_enabled: true
+    notes: Monetary Authority of Singapore materials for the financial sector.
+
+  - name: IMDA
+    country: SG
+    base_url: https://www.imda.gov.sg/
+    source_type: regulator_material
+    source_category: telecom_media_regulator
+    priority: 3
+    official_status: official
+    expected_source_types:
+      - code_of_practice
+      - regulatory_guidance
+      - licence_condition
+      - explanatory_material
+    mvp_enabled: true
+    notes: Infocomm Media Development Authority materials for telecom and media.
+
+  - name: Singapore e-Gazette
+    country: SG
+    base_url: https://www.egazette.gov.sg/
+    source_type: official_gazette
+    source_category: official_gazette
+    priority: 4
+    official_status: official
+    expected_source_types:
+      - gazette_notice
+      - published_legislation
+    mvp_enabled: false
+    notes: Placeholder for future official Gazette discovery; no live acquisition in this MVP.
+
+  - name: eLitigation
+    country: SG
+    base_url: https://www.elitigation.sg/
+    source_type: case_law
+    source_category: case_law
+    priority: 5
+    official_status: official
+    expected_source_types:
+      - judgment
+      - court_order
+    mvp_enabled: false
+    notes: Case law source; intentionally excluded from the Singapore MVP.
+
+seed_laws:
+  - name: Personal Data Protection Act 2012
+    expected_source_type: act
+  - name: Personal Data Protection Regulations
+    expected_source_type: subsidiary_legislation
+  - name: Cybersecurity Act 2018
+    expected_source_type: act
+  - name: Computer Misuse Act
+    expected_source_type: act
+  - name: Criminal Procedure Code
+    expected_source_type: act
+  - name: Telecommunications Act
+    expected_source_type: act
+  - name: Electronic Transactions Act
+    expected_source_type: act
+  - name: Banking Act
+    expected_source_type: act
+  - name: Payment Services Act
+    expected_source_type: act
+known_official_urls:
+  - key: pdpa_2012
+    title: Personal Data Protection Act 2012
+    short_title: PDPA 2012
+    canonical_url: "https://sso.agc.gov.sg/Act/PDPA2012"
+    sso_type: Act
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: primary_legislation
+    priority: 1
+    mvp_enabled: true
+    candidate_indicators:
+      - P6-I4
+      - P7-I1
+      - P7-I3_negative_check
+      - P7-I4
+    notes: >
+      Core horizontal personal data protection law. Use Section 26 for cross-border transfer
+      analysis, but do not misclassify conditional transfer rules as P6-I1 transfer bans.
+      Section 25 is useful as a retention-related negative check because retention limitation
+      is not necessarily a minimum retention requirement.
+
+  - key: pdp_regulations_2021
+    title: Personal Data Protection Regulations 2021
+    short_title: PDP Regulations 2021
+    canonical_url: "https://sso.agc.gov.sg/SL/PDPA2012-S63-2021"
+    sso_type: Subsidiary Legislation
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: subsidiary_legislation
+    authorising_act_key: pdpa_2012
+    priority: 2
+    mvp_enabled: true
+    candidate_indicators:
+      - P6-I4
+      - P7-I1
+    notes: >
+      Key subsidiary legislation for transfer of personal data outside Singapore.
+      Important for P6-I4 conditional flow regime.
+
+  - key: cybersecurity_act_2018
+    title: Cybersecurity Act 2018
+    short_title: Cybersecurity Act
+    canonical_url: "https://sso.agc.gov.sg/Act/CA2018"
+    sso_type: Act
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: primary_legislation
+    priority: 3
+    mvp_enabled: true
+    candidate_indicators:
+      - P7-I2
+      - P7-I5
+    notes: >
+      Core cybersecurity framework. Use for P7-I2 dedicated cybersecurity framework
+      and possibly P7-I5 where provisions empower authorities to obtain information.
+
+  - key: cybersecurity_cii_regulations_2018
+    title: Cybersecurity (Critical Information Infrastructure) Regulations 2018
+    canonical_url: "https://sso.agc.gov.sg/SL/CA2018-S519-2018"
+    sso_type: Subsidiary Legislation
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: subsidiary_legislation
+    authorising_act_key: cybersecurity_act_2018
+    priority: 5
+    mvp_enabled: true
+    candidate_indicators:
+      - P7-I2
+      - P7-I5
+    notes: >
+      Cybersecurity subsidiary legislation concerning critical information infrastructure.
+      Useful for cybersecurity obligations and official information/reporting duties.
+
+  - key: cybersecurity_confidential_treatment_regulations_2018
+    title: Cybersecurity (Confidential Treatment of Information) Regulations 2018
+    canonical_url: "https://sso.agc.gov.sg/SL/CA2018-S520-2018"
+    sso_type: Subsidiary Legislation
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: subsidiary_legislation
+    authorising_act_key: cybersecurity_act_2018
+    priority: 8
+    mvp_enabled: true
+    candidate_indicators:
+      - P7-I2
+      - P7-I5
+    notes: >
+      Useful for understanding how information obtained under the Cybersecurity Act
+      is treated. Lower priority than the main Act and CII regulations.
+
+  - key: cybersecurity_service_providers_regulations_2022
+    title: Cybersecurity (Cybersecurity Service Providers) Regulations 2022
+    canonical_url: "https://sso.agc.gov.sg/SL/CA2018-S304-2022"
+    sso_type: Subsidiary Legislation
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: subsidiary_legislation
+    authorising_act_key: cybersecurity_act_2018
+    priority: 9
+    mvp_enabled: true
+    candidate_indicators:
+      - P7-I2
+    notes: >
+      Sector/professional cybersecurity service provider regulation. Useful for P7-I2
+      but probably not a core P7-I5 source.
+
+  - key: criminal_procedure_code_2010
+    title: Criminal Procedure Code 2010
+    short_title: CPC 2010
+    canonical_url: "https://sso.agc.gov.sg/Act/CPC2010"
+    sso_type: Act
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: primary_legislation
+    priority: 4
+    mvp_enabled: true
+    candidate_indicators:
+      - P7-I5
+    notes: >
+      Important for government/law-enforcement access to data. Use for P7-I5,
+      especially provisions authorising access, search, inspection, copying, or production
+      of data.
+
+  - key: telecommunications_act_1999
+    title: Telecommunications Act 1999
+    short_title: Telecommunications Act
+    canonical_url: "https://sso.agc.gov.sg/Act/TA1999"
+    sso_type: Act
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: primary_legislation
+    priority: 6
+    mvp_enabled: true
+    candidate_indicators:
+      - P7-I3_candidate
+      - P7-I5
+    notes: >
+      Sectoral telecom law. Use to search for sectoral data retention, lawful access,
+      inspection, production, or disclosure obligations. Confirm whether any retention
+      provision is a true minimum retention requirement before mapping to P7-I3.
+
+  - key: computer_misuse_act_1993
+    title: Computer Misuse Act 1993
+    short_title: Computer Misuse Act
+    canonical_url: "https://sso.agc.gov.sg/Act/CMA1993"
+    sso_type: Act
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: primary_legislation
+    priority: 7
+    mvp_enabled: true
+    candidate_indicators:
+      - P7-I2
+      - P7-I5_candidate
+    notes: >
+      Computer misuse and cybercrime law. Useful as a cybersecurity-related source,
+      but distinguish cybercrime offences from a dedicated cybersecurity governance framework.
+
+  - key: electronic_transactions_act_2010
+    title: Electronic Transactions Act 2010
+    short_title: ETA 2010
+    canonical_url: "https://sso.agc.gov.sg/Act/ETA2010"
+    sso_type: Act
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: primary_legislation
+    priority: 50
+    mvp_enabled: false
+    candidate_indicators:
+      - P12_candidate
+    notes: >
+      Relevant to online transactions rather than core P6/P7. Keep in registry for
+      later extension but do not prioritise in the Singapore P6/P7 MVP.
+
+  - key: banking_act_1970
+    title: Banking Act 1970
+    short_title: Banking Act
+    canonical_url: "https://sso.agc.gov.sg/Act/BA1970"
+    sso_type: Act
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: primary_legislation
+    priority: 10
+    mvp_enabled: true
+    candidate_indicators:
+      - P6-I1_false_positive_test
+      - P7_sectoral_candidate
+    notes: >
+      Important negative-control source. Section 47-type confidentiality obligations
+      should not be misclassified as cross-border transfer bans or local processing
+      requirements. Use to test false positive suppression for P6-I1.
+
+  - key: payment_services_act_2019
+    title: Payment Services Act 2019
+    short_title: Payment Services Act
+    canonical_url: "https://sso.agc.gov.sg/Act/PSA2019"
+    sso_type: Act
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: primary_legislation
+    priority: 11
+    mvp_enabled: true
+    candidate_indicators:
+      - P7_sectoral_candidate
+    notes: >
+      Sectoral financial/payment regulation. Use as a lower-priority source for
+      sector-specific obligations and as an entry point to payment services subsidiary legislation.
+
+  - key: monetary_authority_of_singapore_act_1970
+    title: Monetary Authority of Singapore Act 1970
+    short_title: MAS Act
+    canonical_url: "https://sso.agc.gov.sg/Act/MASA1970"
+    sso_type: Act
+    source_name: Singapore Statutes Online
+    source_category: official_legislation
+    legal_rank: primary_legislation
+    priority: 60
+    mvp_enabled: false
+    candidate_indicators:
+      - sectoral_regulator_context
+    notes: >
+      Regulator-authority context for MAS. Not a primary P6/P7 evidence source for the MVP,
+      but useful later when classifying MAS notices or binding sectoral instruments.

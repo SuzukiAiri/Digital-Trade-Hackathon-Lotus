@@ -1,0 +1,32 @@
+{
+  "override_version": "rdtii-malaysia-p4-source-overrides-v1",
+  "records": {
+    "291": {
+      "canonical_title": "Patents Act 1983",
+      "law_number": "Act 291",
+      "source_family": "patent",
+      "p4_routes": [
+        "P4_PATENT_APPLICATION",
+        "P4_PATENT_ENFORCEMENT"
+      ],
+      "p4_indicators": [
+        "P4-I1",
+        "P4-I2",
+        "P4-I3"
+      ]
+    },
+    "332": {
+      "canonical_title": "Copyright Act 1987",
+      "law_number": "Act 332",
+      "source_family": "copyright",
+      "p4_routes": [
+        "P4_COPYRIGHT_FRAMEWORK",
+        "P4_ONLINE_COPYRIGHT"
+      ],
+      "p4_indicators": [
+        "P4-I5",
+        "P4-I6"
+      ]
+    }
+  }
+}

@@ -1,0 +1,36 @@
+.env
+API.txt
+.venv/
+.cache/
+.hf_home/
+.huggingface/
+models/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.tmp
+*.bak
+*.egg-info/
+
+# Generated corpora and mapping outputs are excluded by default.
+outputs/*
+!outputs/corpus/
+outputs/corpus/*
+!outputs/corpus/singapore/
+!outputs/corpus/australia/
+!outputs/corpus/malaysia/
+outputs/corpus/singapore/*
+outputs/corpus/australia/*
+outputs/corpus/malaysia/*
+!outputs/corpus/singapore/final_submit/
+!outputs/corpus/australia/final_submit/
+!outputs/corpus/malaysia/final_submit/
+!outputs/corpus/singapore/final_submit/**
+!outputs/corpus/australia/final_submit/**
+!outputs/corpus/malaysia/final_submit/**
+
+# Downloaded legal-source corpora are reproducible and too large for GitHub.
+data/legal_sources/**/raw/**
+data/legal_sources/**/normalized/**
+data/legal_sources/**/metadata/**

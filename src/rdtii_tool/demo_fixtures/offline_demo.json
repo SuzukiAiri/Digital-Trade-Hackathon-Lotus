@@ -1,0 +1,52 @@
+{
+  "records": [
+    {
+      "economy": "Singapore",
+      "law_name": "Personal Data Protection Act 2012",
+      "law_number": "Act 26 of 2012",
+      "last_amended": "2024",
+      "indicator_id": "P7-I1",
+      "article": "s. 11",
+      "location_reference": "Personal Data Protection Act 2012, s. 11",
+      "source_text": "An organisation must comply with the data protection provisions in respect of personal data in its possession or under its control.",
+      "verbatim_snippet": "An organisation must comply with the data protection provisions in respect of personal data in its possession or under its control.",
+      "mapping_rationale": "The fixture provision establishes a general personal-data protection obligation for organisations.",
+      "source_url": "https://sso.agc.gov.sg/Act/PDPA2012",
+      "discovery_tag": "KNOWN",
+      "confidence": "1.00",
+      "notes": "offline_demo_fixture"
+    },
+    {
+      "economy": "Australia",
+      "law_name": "Privacy Act 1988",
+      "law_number": "Act No. 119 of 1988",
+      "last_amended": "2024",
+      "indicator_id": "P7-I3",
+      "article": "APP 11.2",
+      "location_reference": "Privacy Act 1988, Australian Privacy Principle 11.2",
+      "source_text": "If an APP entity no longer needs personal information for any purpose for which the information may be used or disclosed by the entity under this Schedule, the entity must take such steps as are reasonable in the circumstances to destroy the information or to ensure that the information is de-identified.",
+      "verbatim_snippet": "the entity must take such steps as are reasonable in the circumstances to destroy the information or to ensure that the information is de-identified.",
+      "mapping_rationale": "The fixture provision demonstrates article-level citation and snippet validation for a data-retention lifecycle obligation.",
+      "source_url": "https://www.legislation.gov.au/C2004A03712/latest",
+      "discovery_tag": "NEW",
+      "confidence": "1.00",
+      "notes": "offline_demo_fixture"
+    },
+    {
+      "economy": "Malaysia",
+      "law_name": "Personal Data Protection Act 2010",
+      "law_number": "Act 709",
+      "last_amended": "",
+      "indicator_id": "P7-I2",
+      "article": "s. 9",
+      "location_reference": "Personal Data Protection Act 2010, s. 9",
+      "source_text": "A data user shall, when processing personal data, take practical steps to protect the personal data from any loss, misuse, modification, unauthorised or accidental access or disclosure, alteration or destruction.",
+      "verbatim_snippet": "take practical steps to protect the personal data from any loss, misuse, modification, unauthorised or accidental access or disclosure",
+      "mapping_rationale": "The fixture provision demonstrates schema-valid output for a Malaysia data-security obligation without using the full corpus.",
+      "source_url": "https://lom.agc.gov.my/",
+      "discovery_tag": "NEW",
+      "confidence": "1.00",
+      "notes": "offline_demo_fixture"
+    }
+  ]
+}
