@@ -82,7 +82,7 @@ Full PDF-capable install:
 python -m pip install -e ".[pdf]"
 ```
 
-The `pdf` extra installs `docling==2.112.0`. Docling is not vendored in this repository; no model cache, virtual environment, or converted PDF corpus is included.
+The `pdf` extra installs `docling==2.112.0` and its resolver may install a large PyTorch stack. Plan for several GB of environment and cache usage on a fresh machine, especially on CPU-only systems. Docling is not vendored in this repository; no model cache, virtual environment, or converted PDF corpus is included.
 
 If PDF processing is requested without the extra, install it with:
 
@@ -186,6 +186,8 @@ python -m rdtii_tool map-rdtii --economy malaysia --pillars 4
 
 Final audit uses the same global batch audit flow for completed local rows. Cache-only mode avoids API calls.
 
+These commands require a working `outputs/corpus/<economy>/submission/` directory produced by the full local pipeline. The release package intentionally includes only protected `final_submit` outputs, so a fresh release clone can verify the submitted files but cannot directly rerun `final-audit` or `export-submission` until the missing submission workspace has been regenerated.
+
 ```bash
 RDTII_FINAL_AUDIT_MODE=cache_only python -m rdtii_tool final-audit --economy singapore --pillars 6 7
 RDTII_FINAL_AUDIT_MODE=cache_only python -m rdtii_tool final-audit --economy australia --pillars 6 7
@@ -197,6 +199,8 @@ Offline export:
 ```bash
 python -m rdtii_tool export-submission --economies singapore australia malaysia --pillars 6 7
 ```
+
+`final-audit` fails closed when prefinal inputs are missing or empty, and will not create GPT audit requests for empty input. `export-submission` preflights every required `final_rows.jsonl` before creating final output directories.
 
 ## Release Outputs
 

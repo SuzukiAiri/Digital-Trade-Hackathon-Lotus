@@ -91,12 +91,11 @@ def run_final_audit(project_root: Path, economy: str, pillars: set[int]) -> dict
     submission_dir = Path(project_root) / "outputs" / "corpus" / economy / "submission"
     if pillars == {4}:
         submission_dir = submission_dir / "p4"
-    submission_dir.mkdir(parents=True, exist_ok=True)
-    registry = load_legal_inventory_registry(project_root)
     human_decisions = _load_human_decisions(submission_dir / "human_decisions.jsonl")
     source_rows, canonical_rows = _load_prefinal_rows(
         submission_dir, economy, human_decisions, scope_slug=scope_slug
     )
+    registry = load_legal_inventory_registry(project_root)
     review_rows = _load_jsonl(submission_dir / "human_review.jsonl")
     framework_conclusions = _load_framework_conclusions(
         submission_dir / "framework_conclusions.json"
@@ -218,8 +217,17 @@ def _load_prefinal_rows(
     final_rows_path = submission_dir / "final_rows.jsonl"
     if final_rows_path.exists():
         canonical_rows = _load_canonical_final_rows(final_rows_path, human_decisions)
+        if not canonical_rows:
+            raise RuntimeError(f"final_rows.jsonl has no rows; final-audit will not audit empty input: {final_rows_path}")
         return [row["row"] for row in canonical_rows], canonical_rows
-    source_rows = _load_submission_rows(submission_dir / f"{economy}_{scope_slug}.json")
+    source_path = submission_dir / f"{economy}_{scope_slug}.json"
+    if not source_path.exists():
+        raise RuntimeError(
+            f"prefinal submission input missing; run the mapping/export pipeline before final-audit: {source_path}"
+        )
+    source_rows = _load_submission_rows(source_path)
+    if not source_rows:
+        raise RuntimeError(f"prefinal submission input has no rows; final-audit will not audit empty input: {source_path}")
     return source_rows, _build_canonical_rows(economy, source_rows, human_decisions)
 
 
