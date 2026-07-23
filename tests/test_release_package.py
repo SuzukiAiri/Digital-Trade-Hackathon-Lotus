@@ -75,6 +75,50 @@ class ReleasePackageTest(unittest.TestCase):
         )
         self.assertIn("Release verification: PASS", result.stdout)
 
+    def test_export_submission_preflights_before_writing(self):
+        from rdtii_tool.mapping.offline_export import export_completed_submissions
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project_root = Path(tmp)
+            with self.assertRaisesRegex(RuntimeError, "final_rows\\.jsonl missing"):
+                export_completed_submissions(project_root, ["singapore"], {6, 7})
+            self.assertFalse((project_root / "outputs" / "final_submission").exists())
+
+    def test_final_audit_missing_prefinal_input_fails_closed(self):
+        from rdtii_tool.mapping.final_audit import run_final_audit
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project_root = Path(tmp)
+            with self.assertRaisesRegex(RuntimeError, "prefinal submission input missing"):
+                run_final_audit(project_root, "singapore", {6, 7})
+            self.assertFalse((project_root / "outputs" / "corpus" / "singapore" / "submission").exists())
+
+    def test_final_audit_empty_source_rows_fails_closed(self):
+        from rdtii_tool.mapping.final_audit import run_final_audit
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project_root = Path(tmp)
+            submission_dir = project_root / "outputs" / "corpus" / "singapore" / "submission"
+            submission_dir.mkdir(parents=True)
+            (submission_dir / "singapore_p6_p7.json").write_text("[]", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "has no rows"):
+                run_final_audit(project_root, "singapore", {6, 7})
+            self.assertFalse((submission_dir / "final_audit_summary.json").exists())
+            self.assertFalse((submission_dir / "final_audit_actions.jsonl").exists())
+
+    def test_final_audit_empty_final_rows_fails_closed(self):
+        from rdtii_tool.mapping.final_audit import run_final_audit
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project_root = Path(tmp)
+            submission_dir = project_root / "outputs" / "corpus" / "singapore" / "submission"
+            submission_dir.mkdir(parents=True)
+            (submission_dir / "final_rows.jsonl").write_text("", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "has no rows"):
+                run_final_audit(project_root, "singapore", {6, 7})
+            self.assertFalse((submission_dir / "final_audit_summary.json").exists())
+            self.assertFalse((submission_dir / "final_audit_actions.jsonl").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

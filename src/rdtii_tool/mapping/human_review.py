@@ -85,6 +85,10 @@ DISPLAY_REFRESH_COLUMNS = [
 ]
 
 
+def _hidden_column_attr(column: str) -> str:
+    return ' hidden="1"' if column in HIDDEN_REVIEW_COLUMNS else ""
+
+
 def review_dir(project_root: Path, economy_slug: str, *, scope: str = "p6_p7") -> Path:
     if scope not in {"p4", "p6_p7"}:
         raise ValueError(f"Unsupported human-review scope: {scope}")
@@ -701,7 +705,10 @@ def _write_xlsx(path: Path, sheets: dict[str, tuple[list[str], list[dict]]]) -> 
                 "Review Notes": 28,
             }
             cols_xml = "<cols>" + "".join(
-                f'<col min="{idx}" max="{idx}" width="{widths_by_name.get(column, 18)}" customWidth="1"{ " hidden=\"1\"" if column in HIDDEN_REVIEW_COLUMNS else ""}/>'
+                (
+                    f'<col min="{idx}" max="{idx}" width="{widths_by_name.get(column, 18)}" '
+                    f'customWidth="1"{_hidden_column_attr(column)}/>'
+                )
                 for idx, column in enumerate(columns, start=1)
             ) + "</cols>"
         elif name == "Instructions":
