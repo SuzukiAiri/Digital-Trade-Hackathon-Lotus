@@ -40,6 +40,7 @@ def _mapping_parser() -> argparse.ArgumentParser:
     parser.add_argument("--economy", required=True, choices=("singapore", "australia", "malaysia"))
     parser.add_argument("--pillars", nargs="+", type=int, default=[6, 7])
     parser.add_argument("--live", action="store_true", help="Compatibility alias; standard map-rdtii already processes stale/cache-miss tasks when an API key is available.")
+    parser.add_argument("--cache-only", action="store_true", help="Replay using existing Mapper/Reviewer/PDF caches only; never call online models.")
     return parser
 
 
@@ -76,6 +77,7 @@ def _run_build_corpus(argv: Sequence[str]) -> int:
 
             MalaysiaZone1Builder(PROJECT_ROOT).build_zone1()
         summary = standardize_zone1_corpus(PROJECT_ROOT, "malaysia").as_dict()
+        _assert_zone1_ready("malaysia", summary)
         print("Malaysia Zone 1 corpus build completed")
         print(f"zone1_documents: {summary['documents_count']}")
         print(f"zone1_provision_files: {summary['provision_files_count']}")
@@ -96,6 +98,7 @@ def _run_build_corpus(argv: Sequence[str]) -> int:
 
             AustraliaFRLCorpusBuilder(PROJECT_ROOT).build_zone1_provisions()
         summary = standardize_zone1_corpus(PROJECT_ROOT, "australia").as_dict()
+        _assert_zone1_ready("australia", summary)
         print("Australia Zone 1 corpus build completed")
         print(f"zone1_documents: {summary['documents_count']}")
         print(f"zone1_provision_files: {summary['provision_files_count']}")
@@ -111,6 +114,7 @@ def _run_build_corpus(argv: Sequence[str]) -> int:
 
         SingaporeCorpusBuilder(PROJECT_ROOT / "outputs" / "corpus" / "singapore").build({6, 7})
     summary = standardize_zone1_corpus(PROJECT_ROOT, "singapore").as_dict()
+    _assert_zone1_ready("singapore", summary)
     print("Singapore corpus build completed")
     print(f"zone1_documents: {summary['documents_count']}")
     print(f"zone1_provision_files: {summary['provision_files_count']}")
@@ -128,7 +132,7 @@ def _run_mapping(argv: Sequence[str]) -> int:
     from rdtii_tool.mapping.pipeline import MappingPipeline
     economy_title = {"australia": "Australia", "singapore": "Singapore", "malaysia": "Malaysia"}[args.economy]
     try:
-        summary = MappingPipeline(root, economy=economy_title, pillars=pillars, live=True).run()
+        summary = MappingPipeline(root, economy=economy_title, pillars=pillars, live=not args.cache_only).run()
     except RuntimeError as exc:
         message = str(exc)
         marker = "Run validation failed; staging moved to "
@@ -142,7 +146,9 @@ def _run_mapping(argv: Sequence[str]) -> int:
         return 1
     scope_label = "P4" if pillars == {4} else "P6/P7"
     prefix = f"{args.economy}_{'p4' if pillars == {4} else 'p6_p7'}"
-    print(f"{economy_title} {scope_label} mapping completed")
+    warnings = _mapping_warning_count(summary)
+    status = "completed_with_warnings" if warnings else "completed"
+    print(f"{economy_title} {scope_label} mapping {status}")
     print(f"Provisions loaded: {summary['provisions_loaded']}")
     print(f"Provisions scanned: {summary['provisions_scanned']}")
     print(f"Candidate tasks: {summary['candidate_tasks']}")
@@ -157,13 +163,45 @@ def _run_mapping(argv: Sequence[str]) -> int:
     print(f"Mapper cache hits: {summary['mapper_cache_hits']}")
     print(f"Reviewer calls: {summary['reviewer_calls']}")
     print(f"Reviewer cache hits: {summary['reviewer_cache_hits']}")
+    if warnings:
+        print(f"Warnings: {warnings}")
+        print(f"Technical repair queue: {root / ('mappings/p4/current' if pillars == {4} else 'mappings/current') / 'technical_repair_queue.jsonl'}")
     if pillars == {4}:
         print(f"Atomic evidence: {root / 'mappings/p4/current/atomic_evidence.jsonl'}")
         print(f"Submission CSV: {root / 'submission/p4' / f'{prefix}.csv'}")
     else:
         print(f"Atomic evidence: {root / 'mappings/current/atomic_evidence.jsonl'}")
-        print(f"Submission CSV: {root / 'mappings/submission' / f'{prefix}.csv'}")
+        print(f"Submission CSV: {root / 'submission' / f'{prefix}.csv'}")
     return 0
+
+
+def _mapping_warning_count(summary: dict) -> int:
+    return (
+        int(summary.get("technical_repair_tasks") or 0)
+        + int(summary.get("pdf_documents_failed") or 0)
+        + int(summary.get("pdf_documents_pending_live_processing") or 0)
+        + int(summary.get("model_review_pending_tasks") or 0)
+    )
+
+
+def _assert_zone1_ready(economy: str, summary: dict) -> None:
+    documents = int(summary.get("documents_count") or 0)
+    provisions = int(summary.get("provisions_count") or 0)
+    failures: list[str] = []
+    if documents <= 0:
+        failures.append("zero_documents")
+    if provisions <= 0:
+        failures.append("zero_provisions")
+    report = PROJECT_ROOT / "outputs" / "corpus" / economy / "download_report.json"
+    if report.exists():
+        try:
+            payload = json.loads(report.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            failures.append("download_report_unreadable")
+    if failures:
+        raise RuntimeError(
+            f"{economy} Zone 1 corpus is not complete enough for mapping: {', '.join(failures)}"
+        )
 
 
 def _run_final_audit(argv: Sequence[str]) -> int:

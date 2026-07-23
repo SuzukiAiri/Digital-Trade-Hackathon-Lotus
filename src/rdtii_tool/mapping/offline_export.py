@@ -18,26 +18,26 @@ def export_completed_submissions(project_root: Path, economies: list[str], pilla
     if pillars not in ({4}, {6, 7}):
         raise RuntimeError("unsupported pillar combination")
     scope_slug = "p4" if pillars == {4} else "p6_p7"
+    registry = load_legal_inventory_registry(project_root)
+    summary: dict[str, dict] = {"baseline": registry.summary(), "economies": {}}
+    all_rows: list[dict[str, str]] = []
     ordered = [economy for economy in ECONOMY_ORDER if economy in set(economies)]
     ordered.extend(economy for economy in economies if economy not in ordered)
-    final_row_paths: dict[str, Path] = {}
+    loaded: list[tuple[str, Path, list[dict[str, str]]]] = []
     for economy in ordered:
         submission_dir = Path(project_root) / "outputs" / "corpus" / economy / "submission"
         if pillars == {4}:
             submission_dir = submission_dir / "p4"
-        final_rows_path = submission_dir / "final_rows.jsonl"
-        if not final_rows_path.exists():
-            raise RuntimeError(f"final_rows.jsonl missing; run final-audit first: {final_rows_path}")
-        final_row_paths[economy] = final_rows_path
+        rows = [_with_discovery_tag(row, registry) for row in _load_final_rows(submission_dir / "final_rows.jsonl")]
+        if not rows:
+            raise RuntimeError(
+                f"final_rows.jsonl is empty for {economy}; export-submission requires completed local final-audit output"
+            )
+        loaded.append((economy, submission_dir, rows))
 
-    registry = load_legal_inventory_registry(project_root)
     final_dir = Path(project_root) / "outputs" / "final_submission"
     final_dir.mkdir(parents=True, exist_ok=True)
-    summary: dict[str, dict] = {"baseline": registry.summary(), "economies": {}}
-    all_rows: list[dict[str, str]] = []
-    for economy in ordered:
-        submission_dir = final_row_paths[economy].parent
-        rows = [_with_discovery_tag(row, registry) for row in _load_final_rows(final_row_paths[economy])]
+    for economy, submission_dir, rows in loaded:
         _write_outputs(submission_dir, f"{economy}_{scope_slug}", rows)
         _write_outputs(final_dir, f"{economy}_{scope_slug}", rows)
         all_rows.extend(rows)

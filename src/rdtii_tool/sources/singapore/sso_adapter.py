@@ -17,6 +17,7 @@ from rdtii_tool.downloaders.sso_html import DIRECT_HTML_HEADERS, SSOHTMLDownload
 from rdtii_tool.ingestion.parser_router import ParserRouter
 from rdtii_tool.zone1.models import DocumentRef, DownloadCandidate, DownloadResult, HostPolicy
 from rdtii_tool.zone1.storage import write_json, write_jsonl
+from rdtii_tool.sources.singapore.sso_catalog import SSOCatalogueAdapter
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -63,10 +64,38 @@ class SingaporeSSOAdapter:
         }
 
     def discover(self) -> Iterable[DocumentRef]:
-        for record in _read_jsonl(self.source_root / "singapore_sso_current_acts.jsonl"):
+        acts_path = self.source_root / "singapore_sso_current_acts.jsonl"
+        subsidiary_path = self.source_root / "singapore_sso_current_subsidiary_legislation.jsonl"
+        if not acts_path.exists() or not subsidiary_path.exists():
+            self._discover_catalogue(acts_path, subsidiary_path)
+        for record in _read_jsonl(acts_path):
             yield self._document(record, "act")
-        for record in _read_jsonl(self.source_root / "singapore_sso_current_subsidiary_legislation.jsonl"):
+        for record in _read_jsonl(subsidiary_path):
             yield self._document(record, "subsidiary_legislation")
+
+    def _discover_catalogue(self, acts_path: Path, subsidiary_path: Path) -> None:
+        catalogue = SSOCatalogueAdapter(debug_dir=self.output_root / "debug")
+        acts = [record.to_json_dict() for record in catalogue.discover_current_acts()]
+        subsidiary = [
+            record.to_json_dict()
+            for record in catalogue.discover_current_subsidiary_legislation()
+        ]
+        if not acts or not subsidiary:
+            raise RuntimeError(
+                "Singapore SSO catalogue discovery produced empty results; cannot build Zone 1 corpus"
+            )
+        write_jsonl(acts_path, acts)
+        write_jsonl(subsidiary_path, subsidiary)
+        write_json(
+            self.source_root / "singapore_sso_catalog_summary.json",
+            {
+                "acts": len(acts),
+                "subsidiary_legislation": len(subsidiary),
+                "pages_visited": len(catalogue.pages_visited),
+                "failed_catalogue_pages": catalogue.failed_catalogue_pages,
+                "duplicate_records_removed": catalogue.duplicate_records_removed,
+            },
+        )
 
     def _document(self, record: dict[str, Any], kind: str) -> DocumentRef:
         document_id = self._document_id(record, kind)

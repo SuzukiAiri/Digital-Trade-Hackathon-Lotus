@@ -85,10 +85,6 @@ DISPLAY_REFRESH_COLUMNS = [
 ]
 
 
-def _hidden_column_attr(column: str) -> str:
-    return ' hidden="1"' if column in HIDDEN_REVIEW_COLUMNS else ""
-
-
 def review_dir(project_root: Path, economy_slug: str, *, scope: str = "p6_p7") -> Path:
     if scope not in {"p4", "p6_p7"}:
         raise ValueError(f"Unsupported human-review scope: {scope}")
@@ -704,13 +700,13 @@ def _write_xlsx(path: Path, sheets: dict[str, tuple[list[str], list[dict]]]) -> 
                 "Source URL": 28,
                 "Review Notes": 28,
             }
-            cols_xml = "<cols>" + "".join(
-                (
-                    f'<col min="{idx}" max="{idx}" width="{widths_by_name.get(column, 18)}" '
-                    f'customWidth="1"{_hidden_column_attr(column)}/>'
+            cols = []
+            for idx, column in enumerate(columns, start=1):
+                hidden = ' hidden="1"' if column in HIDDEN_REVIEW_COLUMNS else ""
+                cols.append(
+                    f'<col min="{idx}" max="{idx}" width="{widths_by_name.get(column, 18)}" customWidth="1"{hidden}/>'
                 )
-                for idx, column in enumerate(columns, start=1)
-            ) + "</cols>"
+            cols_xml = "<cols>" + "".join(cols) + "</cols>"
         elif name == "Instructions":
             cols_xml = '<cols><col min="1" max="1" width="120" customWidth="1"/></cols>'
             pane_xml = '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
@@ -753,10 +749,13 @@ def _write_xlsx(path: Path, sheets: dict[str, tuple[list[str], list[dict]]]) -> 
     with zipfile.ZipFile(path.with_suffix(".tmp"), "w", zipfile.ZIP_DEFLATED) as zf:
         zf.writestr("[Content_Types].xml", "".join(content_types))
         zf.writestr("_rels/.rels", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')
-        zf.writestr("xl/workbook.xml", f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>{"".join(workbook_sheets)}</sheets></workbook>')
-        zf.writestr("xl/_rels/workbook.xml.rels", f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">{"".join(workbook_rels)}<Relationship Id="rIdSharedStrings" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/><Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>')
+        workbook_sheets_xml = "".join(workbook_sheets)
+        workbook_rels_xml = "".join(workbook_rels)
+        shared_strings_xml = "".join(f"<si><t>{escape(text)}</t></si>" for text in shared)
+        zf.writestr("xl/workbook.xml", f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>{workbook_sheets_xml}</sheets></workbook>')
+        zf.writestr("xl/_rels/workbook.xml.rels", f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">{workbook_rels_xml}<Relationship Id="rIdSharedStrings" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/><Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>')
         zf.writestr("xl/styles.xml", _styles_xml())
-        zf.writestr("xl/sharedStrings.xml", f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="{len(shared)}" uniqueCount="{len(shared)}">{"".join(f"<si><t>{escape(text)}</t></si>" for text in shared)}</sst>')
+        zf.writestr("xl/sharedStrings.xml", f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="{len(shared)}" uniqueCount="{len(shared)}">{shared_strings_xml}</sst>')
         for name, xml in sheet_xml.items():
             zf.writestr(name, xml)
     path.with_suffix(".tmp").replace(path)
