@@ -966,6 +966,8 @@ class MappingPipeline:
         reviewer_cache_hit = False
         last_key = None
         reviewer_failed = False
+        reviewer_error_code = "reviewer_cache_missing"
+        reviewer_error_detail = "compatible reviewer cache missing"
         resolver_task = task
         stale_framework_cache = False
         for record in [*result.accepted_matches, *result.review_matches]:
@@ -1034,8 +1036,10 @@ class MappingPipeline:
                 reviewer_decisions.append(reviewer)
                 reviewer_llm_call = True
                 review_model = used_review_model
-            except Exception:
+            except Exception as exc:
                 reviewer_failed = True
+                reviewer_error_code, reviewer_error_detail = _classify_reviewer_exception(exc)
+                resolution_notes.append(f"{reviewer_error_code}: {reviewer_error_detail}")
         if not reviewer_decisions:
             if task.task_kind == "framework_element" and not self.live:
                 reason = "framework_typed_review_cache_stale" if stale_framework_cache else "framework_typed_review_cache_missing"
@@ -1056,7 +1060,11 @@ class MappingPipeline:
                     "review_resolution_completed": True,
                     "review_resolution_notes": resolution_notes,
                 })
-            technical_detail = "api_key_required_for_reviewer_cache_miss" if self.live and not api_key_available() else "reviewer_model_unavailable"
+            technical_detail = (
+                "api_key_required_for_reviewer_cache_miss"
+                if self.live and not api_key_available()
+                else reviewer_error_code
+            )
             update = {
                 "status": "technical_repair",
                 "queue_type": "technical_repair",
@@ -1065,7 +1073,7 @@ class MappingPipeline:
                 "review_reasons": [],
                 "technical_detail": technical_detail,
                 "affected_evidence_ids": [],
-                "expected_repair_action": "set_OPENAI_API_KEY_then_rerun" if technical_detail.startswith("api_key_required") else "retry_reviewer_or_check_model_configuration",
+                "expected_repair_action": "set_OPENAI_API_KEY_then_rerun" if technical_detail.startswith("api_key_required") else _reviewer_repair_action(technical_detail),
                 "reviewer_model_name": review_model,
                 "reviewer_cache_key": last_key,
                 "reviewer_llm_call": reviewer_failed,
@@ -2301,9 +2309,18 @@ class MappingPipeline:
             else self.root / "submission" / "p4"
         )
         if submission_src.exists():
+            preserved_action_cache = None
             if submission_dst.exists():
+                action_cache = submission_dst / "final_audit_actions.jsonl"
+                if action_cache.exists():
+                    preserved_action_cache = action_cache.read_bytes()
                 shutil.rmtree(submission_dst)
             shutil.copytree(submission_src, submission_dst)
+            stale_final_rows = submission_dst / "final_rows.jsonl"
+            if stale_final_rows.exists():
+                stale_final_rows.unlink()
+            if preserved_action_cache is not None:
+                (submission_dst / "final_audit_actions.jsonl").write_bytes(preserved_action_cache)
             shutil.rmtree(submission_src)
         legacy_submission = self.mappings_dir / "submission"
         if legacy_submission.exists():
@@ -5873,3 +5890,81 @@ def _direct_mapping_enabled(row: dict) -> bool:
     if isinstance(value, bool):
         return value
     return str(value or "").strip().casefold() in {"1", "true", "yes", "y"}
+
+
+def _classify_reviewer_exception(exc: Exception) -> tuple[str, str]:
+    class_name = type(exc).__name__
+    message = _sanitize_model_error(str(exc))
+    folded = f"{class_name} {message}".casefold()
+    if "insufficient_quota" in folded or "insufficient quota" in folded:
+        code = "reviewer_insufficient_quota"
+    elif "ratelimit" in folded or "rate_limit" in folded or "rate limit" in folded or "429" in folded:
+        code = "reviewer_rate_limit"
+    elif (
+        "authentication" in folded
+        or "unauthorized" in folded
+        or "incorrect api key" in folded
+        or "invalid api key" in folded
+        or "401" in folded
+    ):
+        code = "reviewer_authentication"
+    elif (
+        "model_not_found" in folded
+        or "model not found" in folded
+        or "model does not exist" in folded
+        or "does not have access to model" in folded
+        or "404" in folded
+        or "notfounderror" in folded
+    ):
+        code = "reviewer_model_not_found"
+    elif (
+        "schema" in folded
+        or "parse" in folded
+        or "validation" in folded
+        or "json" in folded
+        or "badrequesterror" in folded
+    ):
+        code = "reviewer_schema_parse_error"
+    elif (
+        "connection" in folded
+        or "timeout" in folded
+        or "network" in folded
+        or "ssl" in folded
+        or "api_connection" in folded
+        or "apiconnection" in folded
+        or "apitimeout" in folded
+        or "api timeout" in folded
+    ):
+        code = "reviewer_network_error"
+    else:
+        code = "reviewer_api_error"
+    detail = f"{class_name}: {message}" if message else class_name
+    return code, detail[:500]
+
+
+def _reviewer_repair_action(technical_detail: str) -> str:
+    if technical_detail == "reviewer_insufficient_quota":
+        return "check_openai_billing_or_quota_then_rerun"
+    if technical_detail == "reviewer_rate_limit":
+        return "wait_or_reduce_concurrency_then_rerun"
+    if technical_detail == "reviewer_authentication":
+        return "check_OPENAI_API_KEY_then_rerun"
+    if technical_detail == "reviewer_model_not_found":
+        return "check_reviewer_model_configuration_then_rerun"
+    if technical_detail == "reviewer_schema_parse_error":
+        return "inspect_reviewer_schema_or_cached_response_then_rerun"
+    if technical_detail == "reviewer_network_error":
+        return "check_network_then_rerun"
+    return "retry_reviewer_or_check_model_configuration"
+
+
+def _sanitize_model_error(message: str) -> str:
+    text = str(message or "")
+    text = re.sub(r"sk-(?:proj|svcacct)-[A-Za-z0-9_-]+", "sk-<redacted>", text)
+    text = re.sub(r"\bsk-[A-Za-z0-9]{20,}\b", "sk-<redacted>", text)
+    text = re.sub(
+        r"(?i)(api[-_ ]?key\s*[:=]\s*)([^\s,;]+)",
+        r"\1<redacted>",
+        text,
+    )
+    return re.sub(r"\s+", " ", text).strip()

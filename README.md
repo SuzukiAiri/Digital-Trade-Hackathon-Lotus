@@ -93,7 +93,7 @@ pip install -e ".[pdf]"
 
 ## OpenAI Configuration
 
-Online mapping and live final audit use the OpenAI API. Offline demo and release verification do not require an API key.
+Online mapping and live final audit use the OpenAI API. The offline demo and cache-only replay do not require an API key.
 
 Set environment variables outside Git:
 
@@ -132,7 +132,6 @@ python -m pip install --upgrade pip
 python -m pip install -e . -c constraints-py311.txt
 python -m rdtii_tool --help
 python -m rdtii_tool demo --mode offline --output-dir demo_output
-python scripts/verify_release.py
 ```
 
 Windows PowerShell:
@@ -144,7 +143,6 @@ python -m pip install --upgrade pip
 python -m pip install -e . -c constraints-py311.txt
 python -m rdtii_tool --help
 python -m rdtii_tool demo --mode offline --output-dir demo_output
-python scripts/verify_release.py
 ```
 
 Optional PDF install check:
@@ -189,14 +187,13 @@ RDTII_FINAL_AUDIT_MODE=cache_only python -m rdtii_tool final-audit --economy aus
 RDTII_FINAL_AUDIT_MODE=cache_only python -m rdtii_tool final-audit --economy malaysia --pillars 6 7
 ```
 
-Export P6/P7 submission rows and verify the protected final submit package:
+Export P6/P7 submission rows:
 
 ```bash
 python -m rdtii_tool export-submission --economies singapore australia malaysia --pillars 6 7
-python scripts/verify_release.py
 ```
 
-Do not use `outputs/corpus/<economy>/final_submit/<economy>_p4_p6_p7.csv` or `.json` as final-audit input. Those files are the protected merged final submit result for inspection and release verification, not unreconciled P6/P7 rows to audit again.
+Do not use `outputs/corpus/<economy>/final_submit/<economy>_p4_p6_p7.csv` or `.json` as final-audit input. Those files are the protected merged final submit result for inspection and hash comparison, not unreconciled P6/P7 rows to audit again.
 
 ## Live Runs
 
@@ -262,14 +259,13 @@ Human accepts are protected from lower-level changes but still must satisfy cita
 
 ## Verification
 
-Run the release verifier after replay or before publishing:
+Run a lightweight dependency check after installation:
 
 ```bash
-python scripts/verify_release.py
 python -m pip check
 ```
 
-These checks are offline and should not call OpenAI, Docling OCR, or network services.
+This check is offline and should not call OpenAI, Docling OCR, or network services.
 
 ## Runtime and Cost
 
@@ -286,16 +282,6 @@ OpenAI cost depends on cache state, number of candidate provisions, reviewer cal
 - Docling is installed through the `pdf` extra and may be heavy on CPU-only environments.
 - Malaysia PDF quality depends on source PDF text extraction and Docling availability.
 - The release does not include alternative LLM providers or alternative OCR engines.
-
-## Security
-
-Before publishing, verify:
-
-```bash
-python scripts/verify_release.py
-```
-
-The verifier checks for API-key patterns, local absolute paths, oversized files, excluded output directories, final submit hashes, CSV/JSON parity, Discovery Tags, and duplicate canonical records.
 
 ## License and Team
 

@@ -99,8 +99,7 @@ def run_final_audit(project_root: Path, economy: str, pillars: set[int]) -> dict
     if not source_rows or not canonical_rows:
         raise RuntimeError(
             "final-audit requires non-empty completed local submission input. "
-            f"Expected {submission_dir / 'final_rows.jsonl'} or "
-            f"{submission_dir / f'{economy}_{scope_slug}.json'}. "
+            f"Expected {submission_dir / f'{economy}_{scope_slug}.json'}. "
             "The release package contains final_submit CSV/JSON only and cannot be re-audited."
         )
     review_rows = _load_jsonl(submission_dir / "human_review.jsonl")
@@ -221,52 +220,15 @@ def _load_prefinal_rows(
     *,
     scope_slug: str = "p6_p7",
 ) -> tuple[list[dict[str, str]], list[dict]]:
-    final_rows_path = submission_dir / "final_rows.jsonl"
-    if final_rows_path.exists():
-        canonical_rows = _load_canonical_final_rows(final_rows_path, human_decisions)
-        return [row["row"] for row in canonical_rows], canonical_rows
     source_path = submission_dir / f"{economy}_{scope_slug}.json"
     if not source_path.exists():
         raise RuntimeError(
             "final-audit prefinal input missing. "
-            f"Expected {final_rows_path} or {source_path}. "
+            f"Expected {source_path}. "
             "Do not use final_submit P4/P6/P7 release files as final-audit input."
         )
     source_rows = _load_submission_rows(source_path)
     return source_rows, _build_canonical_rows(economy, source_rows, human_decisions)
-
-
-def _load_canonical_final_rows(path: Path, human_decisions: dict[str, dict]) -> list[dict]:
-    rows: list[dict] = []
-    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        if not line.strip():
-            continue
-        payload = json.loads(line)
-        row = payload.get("row") if isinstance(payload, dict) else None
-        if not isinstance(row, dict):
-            raise RuntimeError(f"final_rows.jsonl row {line_no} missing row object: {path}")
-        clean = {column: str(row.get(column) or "") for column in SUBMISSION_COLUMNS}
-        review_key = str(payload.get("review_key") or "").strip()
-        human_decision = human_decisions.get(review_key) if review_key else None
-        if human_decision and str(human_decision.get("decision")).casefold() == "reject":
-            continue
-        payload = dict(payload)
-        payload["row"] = clean
-        payload["audit_key"] = str(payload.get("audit_key") or _audit_key(clean))
-        payload["review_key"] = review_key
-        payload["evidence_hash"] = str(payload.get("evidence_hash") or _row_evidence_hash(clean))
-        payload["stable_identity"] = str(payload.get("stable_identity") or _stable_identity(clean, review_key))
-        payload["human_protected"] = bool(human_decision and str(human_decision.get("decision")).casefold() == "accept")
-        if payload["human_protected"]:
-            payload["decision_source"] = "human"
-            payload["row"]["Confidence"] = "1.00"
-        else:
-            payload["decision_source"] = str(payload.get("decision_source") or "existing_pipeline")
-        payload["citation_status"] = str(payload.get("citation_status") or "verified")
-        payload["provenance"] = list(payload.get("provenance") or [])
-        payload["merged_from"] = list(payload.get("merged_from") or [])
-        rows.append(payload)
-    return rows
 
 
 def _deduplicate_rows(rows: list[dict]) -> tuple[list[dict], list[dict]]:
