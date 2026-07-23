@@ -64,7 +64,7 @@ Linux/macOS:
 python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -e .
+python -m pip install -e . -c constraints-py311.txt
 ```
 
 Windows PowerShell:
@@ -73,7 +73,7 @@ Windows PowerShell:
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -e .
+python -m pip install -e . -c constraints-py311.txt
 ```
 
 Full PDF-capable install:
@@ -83,6 +83,7 @@ python -m pip install -e ".[pdf]"
 ```
 
 The `pdf` extra installs `docling==2.112.0`. Docling is not vendored in this repository; no model cache, virtual environment, or converted PDF corpus is included.
+Docling's current dependency graph may install PyTorch and CUDA-related wheels even on CPU-only Linux machines, depending on pip resolution and platform wheels. In Linux testing, the PDF-capable virtual environment was about 5.5 GB and the pip cache about 2.8 GB. Use a machine with generous free disk space, clear pip caches when appropriate, and prefer the lightweight install unless you need PDF materialization or the PDF demo.
 
 If PDF processing is requested without the extra, install it with:
 
@@ -128,7 +129,7 @@ Linux/macOS:
 python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -e ".[pdf]"
+python -m pip install -e . -c constraints-py311.txt
 python -m rdtii_tool --help
 python -m rdtii_tool demo --mode offline --output-dir demo_output
 python scripts/verify_release.py
@@ -140,7 +141,7 @@ Windows PowerShell:
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -e ".[pdf]"
+python -m pip install -e . -c constraints-py311.txt
 python -m rdtii_tool --help
 python -m rdtii_tool demo --mode offline --output-dir demo_output
 python scripts/verify_release.py
@@ -154,37 +155,33 @@ python -m rdtii_tool demo --mode pdf --output-dir demo_pdf_output
 
 The PDF demo verifies that `docling==2.112.0` is importable and writes a tiny synthetic PDF fixture. It does not run OCR, call a model, or crawl the web.
 
-## Full Zone 1 Runs
+## Reviewer Replay
 
-Full Zone 1 may download or parse large official legal corpora. It is not a 10-minute demo.
+The reviewer path restores frozen release assets and replays the core P6/P7 workflow without API calls. The assets contain the Zone 1 canonical corpus, source manifests and coverage reports, per-document provisions, Docling/PDF text artifacts, Mapper/Reviewer/PDF Mapper caches, human decisions, final-audit cache, and P6/P7 submission workspace files. P4 support files may be present in the assets because the protected final submit files include P4, but the normal reproducibility flow below is P6/P7.
 
-```bash
-python -m rdtii_tool build-corpus --economy singapore --zone 1
-python -m rdtii_tool build-corpus --economy australia --zone 1
-python -m rdtii_tool build-corpus --economy malaysia --zone 1
-```
-
-## Full Zone 2 Mapping
-
-These commands may call OpenAI when cache misses exist and may use Docling for document-direct PDF inputs.
+Restore all three economy assets:
 
 ```bash
-python -m rdtii_tool map-rdtii --economy singapore --pillars 6 7
-python -m rdtii_tool map-rdtii --economy australia --pillars 6 7
-python -m rdtii_tool map-rdtii --economy malaysia --pillars 6 7
+python scripts/bootstrap_release_assets.py --economies singapore australia malaysia
 ```
 
-Optional P4 extension:
+For an offline audit with already-downloaded assets:
 
 ```bash
-python -m rdtii_tool map-rdtii --economy singapore --pillars 4
-python -m rdtii_tool map-rdtii --economy australia --pillars 4
-python -m rdtii_tool map-rdtii --economy malaysia --pillars 4
+python scripts/bootstrap_release_assets.py --economies singapore australia malaysia --asset-dir /path/to/release-assets
 ```
 
-## Final Audit and Export
+Run P6/P7 cache-only mapping replay:
 
-Final audit uses the same global batch audit flow for completed local rows. Cache-only mode avoids API calls.
+```bash
+python -m rdtii_tool map-rdtii --economy singapore --pillars 6 7 --cache-only
+python -m rdtii_tool map-rdtii --economy australia --pillars 6 7 --cache-only
+python -m rdtii_tool map-rdtii --economy malaysia --pillars 6 7 --cache-only
+```
+
+Technical repairs, citation repairs, old-cache incompatibilities, and framework mismatches are reported as warnings and repair-queue entries. They do not block output when the command completes the main processing and writes valid rows. In that case the CLI prints `completed_with_warnings` and exits 0. The command fails only for missing core inputs, unreadable files, program exceptions, or failure to produce any valid output.
+
+Run final audit in cache-only mode:
 
 ```bash
 RDTII_FINAL_AUDIT_MODE=cache_only python -m rdtii_tool final-audit --economy singapore --pillars 6 7
@@ -192,10 +189,31 @@ RDTII_FINAL_AUDIT_MODE=cache_only python -m rdtii_tool final-audit --economy aus
 RDTII_FINAL_AUDIT_MODE=cache_only python -m rdtii_tool final-audit --economy malaysia --pillars 6 7
 ```
 
-Offline export:
+Export P6/P7 submission rows and verify the protected final submit package:
 
 ```bash
 python -m rdtii_tool export-submission --economies singapore australia malaysia --pillars 6 7
+python scripts/verify_release.py
+```
+
+Do not use `outputs/corpus/<economy>/final_submit/<economy>_p4_p6_p7.csv` or `.json` as final-audit input. Those files are the protected merged final submit result for inspection and release verification, not unreconciled P6/P7 rows to audit again.
+
+## Live Runs
+
+The live Zone 1 commands rebuild corpora from official sources and may be slow or affected by upstream rate limiting and temporary site blocks:
+
+```bash
+python -m rdtii_tool build-corpus --economy singapore --zone 1
+python -m rdtii_tool build-corpus --economy australia --zone 1
+python -m rdtii_tool build-corpus --economy malaysia --zone 1
+```
+
+Live Zone 2 uses the same commands without `--cache-only`. `OPENAI_API_KEY` is needed only when a Mapper, Reviewer, PDF Mapper, or live final-audit cache miss must be resolved:
+
+```bash
+python -m rdtii_tool map-rdtii --economy singapore --pillars 6 7
+python -m rdtii_tool map-rdtii --economy australia --pillars 6 7
+python -m rdtii_tool map-rdtii --economy malaysia --pillars 6 7
 ```
 
 ## Release Outputs
@@ -208,12 +226,14 @@ outputs/corpus/australia/final_submit/
 outputs/corpus/malaysia/final_submit/
 ```
 
-Each country directory contains CSV and JSON files with matching row counts. The release intentionally excludes:
+Each country directory contains CSV and JSON files with matching row counts. The Git-tracked release intentionally excludes:
 
 - `outputs/final_submission/`
 - `outputs/corpus/*/submission/`
 - full Zone 1 corpora
 - raw, normalized, metadata, provisions, Docling artifacts, PDF text, mappings, staging, failed runs, backups, and caches
+
+Those excluded working files are restored by `scripts/bootstrap_release_assets.py`. Release assets must not contain `final_submit` files, virtual environments, API keys, `.env`, local package caches, temporary staging directories, failed-run directories, or user-machine absolute paths.
 
 ## Discovery Tag
 
@@ -240,17 +260,16 @@ Persistent human decisions have highest priority. The authority order is:
 
 Human accepts are protected from lower-level changes but still must satisfy citation/export requirements. Human rejects remain excluded.
 
-## Tests
+## Verification
 
-Run the release verification and unit tests:
+Run the release verifier after replay or before publishing:
 
 ```bash
 python scripts/verify_release.py
-python -m unittest discover -s tests
 python -m pip check
 ```
 
-The release tests are offline and should not call OpenAI, Docling OCR, or network services.
+These checks are offline and should not call OpenAI, Docling OCR, or network services.
 
 ## Runtime and Cost
 
@@ -262,7 +281,7 @@ OpenAI cost depends on cache state, number of candidate provisions, reviewer cal
 
 ## Known Limitations
 
-- Full corpus and mapping runs are intentionally excluded from the release package.
+- The Git repository intentionally excludes large working corpora and caches; `scripts/bootstrap_release_assets.py` restores them from GitHub Release assets.
 - P4 is optional extension scope; P6/P7 remain the core competition submission.
 - Docling is installed through the `pdf` extra and may be heavy on CPU-only environments.
 - Malaysia PDF quality depends on source PDF text extraction and Docling availability.

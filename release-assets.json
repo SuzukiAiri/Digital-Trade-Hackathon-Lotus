@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "asset_version": "20260723-p6-p7-replay",
+  "release_tag": "reviewer-replay-20260723",
+  "base_url": "https://github.com/SuzukiAiri/Digital-Trade-Hackathon-Lotus/releases/download/reviewer-replay-20260723",
+  "assets": [
+    {
+      "economy": "singapore",
+      "filename": "rdtii-singapore-replay-assets-20260723.tar.gz",
+      "version": "20260723-p6-p7-replay",
+      "format": "tar.gz",
+      "size": 115212400,
+      "sha256": "b409541a6e60476f003c0e03fbd40f52b03267c9b0714e36e01e1c1611cde39f",
+      "url": "https://github.com/SuzukiAiri/Digital-Trade-Hackathon-Lotus/releases/download/reviewer-replay-20260723/rdtii-singapore-replay-assets-20260723.tar.gz",
+      "required_paths": [
+        "outputs/corpus/singapore/zone1_documents.jsonl",
+        "outputs/corpus/singapore/zone1_provisions_manifest.jsonl",
+        "outputs/corpus/singapore/provisions",
+        "outputs/corpus/singapore/mappings/p6_p7_measure_cache.jsonl",
+        "outputs/corpus/singapore/submission/final_rows.jsonl"
+      ]
+    },
+    {
+      "economy": "australia",
+      "filename": "rdtii-australia-replay-assets-20260723.tar.gz",
+      "version": "20260723-p6-p7-replay",
+      "format": "tar.gz",
+      "size": 242434604,
+      "sha256": "b9df3761b0eb9ffc8909055f1cbf101d430937828b6b35d15887c7b88c5176c2",
+      "url": "https://github.com/SuzukiAiri/Digital-Trade-Hackathon-Lotus/releases/download/reviewer-replay-20260723/rdtii-australia-replay-assets-20260723.tar.gz",
+      "required_paths": [
+        "outputs/corpus/australia/zone1_documents.jsonl",
+        "outputs/corpus/australia/zone1_provisions_manifest.jsonl",
+        "outputs/corpus/australia/provisions",
+        "outputs/corpus/australia/mappings/p6_p7_measure_cache.jsonl",
+        "outputs/corpus/australia/submission/final_rows.jsonl"
+      ]
+    },
+    {
+      "economy": "malaysia",
+      "filename": "rdtii-malaysia-replay-assets-20260723.tar.gz",
+      "version": "20260723-p6-p7-replay",
+      "format": "tar.gz",
+      "size": 294227544,
+      "sha256": "8d84de55ecef03083f2e51593e07eaff93350a29fb6b183320ea102c8fadcf12",
+      "url": "https://github.com/SuzukiAiri/Digital-Trade-Hackathon-Lotus/releases/download/reviewer-replay-20260723/rdtii-malaysia-replay-assets-20260723.tar.gz",
+      "required_paths": [
+        "outputs/corpus/malaysia/zone1_documents.jsonl",
+        "outputs/corpus/malaysia/zone1_provisions_manifest.jsonl",
+        "outputs/corpus/malaysia/provisions",
+        "outputs/corpus/malaysia/mappings/p6_p7_measure_cache.jsonl",
+        "outputs/corpus/malaysia/submission/final_rows.jsonl"
+      ]
+    }
+  ]
+}

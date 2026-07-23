@@ -19,17 +19,25 @@ def export_completed_submissions(project_root: Path, economies: list[str], pilla
         raise RuntimeError("unsupported pillar combination")
     scope_slug = "p4" if pillars == {4} else "p6_p7"
     registry = load_legal_inventory_registry(project_root)
-    final_dir = Path(project_root) / "outputs" / "final_submission"
-    final_dir.mkdir(parents=True, exist_ok=True)
     summary: dict[str, dict] = {"baseline": registry.summary(), "economies": {}}
     all_rows: list[dict[str, str]] = []
     ordered = [economy for economy in ECONOMY_ORDER if economy in set(economies)]
     ordered.extend(economy for economy in economies if economy not in ordered)
+    loaded: list[tuple[str, Path, list[dict[str, str]]]] = []
     for economy in ordered:
         submission_dir = Path(project_root) / "outputs" / "corpus" / economy / "submission"
         if pillars == {4}:
             submission_dir = submission_dir / "p4"
         rows = [_with_discovery_tag(row, registry) for row in _load_final_rows(submission_dir / "final_rows.jsonl")]
+        if not rows:
+            raise RuntimeError(
+                f"final_rows.jsonl is empty for {economy}; export-submission requires completed local final-audit output"
+            )
+        loaded.append((economy, submission_dir, rows))
+
+    final_dir = Path(project_root) / "outputs" / "final_submission"
+    final_dir.mkdir(parents=True, exist_ok=True)
+    for economy, submission_dir, rows in loaded:
         _write_outputs(submission_dir, f"{economy}_{scope_slug}", rows)
         _write_outputs(final_dir, f"{economy}_{scope_slug}", rows)
         all_rows.extend(rows)

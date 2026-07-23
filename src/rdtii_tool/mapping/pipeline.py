@@ -358,7 +358,7 @@ class MappingPipeline:
         summary["skipped_missing_mapper_cache"] = skipped_missing_mapper_cache
         write_json(self.summary_path, summary)
         write_json(self.output_dir / "mapping_summary.json", summary)
-        validation = self._validate_rebuild_run(summary, provision_results, coverage)
+        validation = self._validate_rebuild_run(summary, provision_results, coverage, pdf_coverage)
         write_json(self.output_dir / "run_validation_report.json", validation)
         if not validation["passed"]:
             write_json(self.output_dir / "run_validation_failure.json", validation)
@@ -1921,9 +1921,12 @@ class MappingPipeline:
         summary: dict,
         provision_results: list[ValidatedTaskResult],
         coverage: dict,
+        pdf_coverage: dict | None = None,
     ) -> dict:
+        pdf_coverage = pdf_coverage or {}
         reviewer_schema_errors = self._reviewer_schema_error_count(provision_results)
         provision_total = int(summary.get("candidate_tasks") or 0)
+        pdf_total = int(summary.get("pdf_documents") or 0)
         provision_status_total = (
             sum(1 for item in provision_results if item.status == "accepted")
             + sum(1 for item in provision_results if item.status == "rejected")
@@ -1933,19 +1936,38 @@ class MappingPipeline:
             + sum(1 for item in provision_results if item.queue_type == "technical_repair")
         )
         failures: list[str] = []
+        warnings: list[str] = []
         if reviewer_schema_errors > 0:
-            failures.append("reviewer_schema_error_present")
+            warnings.append("reviewer_schema_error_present")
         if provision_status_total != provision_total:
-            failures.append("task_status_total_mismatch")
+            warnings.append("task_status_total_mismatch")
+        if int(summary.get("technical_repair_tasks") or 0) > 0:
+            warnings.append("technical_repair_tasks_present")
+        if int(summary.get("pdf_documents_failed") or 0) > 0:
+            warnings.append("pdf_technical_repair_present")
+        if provision_total <= 0 and pdf_total <= 0:
+            failures.append("zero_mapping_tasks")
+        if int(summary.get("submission_rows") or 0) <= 0 and int(summary.get("accepted_measures") or 0) <= 0:
+            failures.append("no_valid_outputs")
+        if not self.live and len(coverage.get("missing_task_ids") or []) > 0:
+            warnings.append("cache_only_mapper_cache_missing")
+        if not self.live and int(pdf_coverage.get("missing_pdf_mapper_cache") or 0) > 0:
+            warnings.append("cache_only_pdf_mapper_cache_missing")
+        if not self.live and int(summary.get("pdf_documents_pending_live_processing") or 0) > 0:
+            warnings.append("cache_only_pdf_pending_live_processing")
+        if not self.live and int(summary.get("network_calls") or 0) > 0:
+            warnings.append("cache_only_network_calls_present")
         counts_total = sum(int(value) for value in (summary.get("counts_by_indicator") or {}).values())
         if counts_total != int(summary.get("accepted_measures") or 0):
-            failures.append("counts_by_indicator_total_mismatch")
+            warnings.append("counts_by_indicator_total_mismatch")
         semantic_checks = self._semantic_validation_checks()
-        failures.extend(semantic_checks["failures"])
+        warnings.extend(semantic_checks["failures"])
         return {
             "generated_at": time.time(),
             "passed": not failures,
             "failures": failures,
+            "warnings": warnings,
+            "status": "completed_with_warnings" if warnings and not failures else ("failed" if failures else "completed"),
             "summary": summary,
             "checks": {
                 "reviewer_schema_errors": reviewer_schema_errors,
@@ -1953,6 +1975,8 @@ class MappingPipeline:
                 "candidate_tasks": provision_total,
                 "mapper_cache_hits": coverage.get("mapper_hits"),
                 "missing_mapper_cache": len(coverage.get("missing_task_ids") or []),
+                "pdf_mapper_cache_hits": pdf_coverage.get("pdf_mapper_hits"),
+                "missing_pdf_mapper_cache": int(pdf_coverage.get("missing_pdf_mapper_cache") or 0),
                 "counts_by_indicator_total": counts_total,
                 "non_citation_technical_repairs": max(
                     0,
@@ -2426,6 +2450,7 @@ class MappingPipeline:
             "pdf_documents_no_match": sum(1 for item in pdf_results if item.get("pdf_documents_no_match")),
             "pdf_documents_with_claims": sum(1 for item in pdf_results if item.get("pdf_documents_with_claims")),
             "pdf_documents_failed": sum(1 for item in pdf_results if item.get("status") == "technical_repair"),
+            "pdf_documents_pending_live_processing": sum(1 for item in pdf_results if item.get("status") == "pending_live_processing"),
             "mapper_calls": stats["llm_calls"],
             "mapper_cache_hits": stats["cache_hits"],
             "reviewer_calls": stats["reviewer_llm_calls"],
@@ -2653,6 +2678,7 @@ class MappingPipeline:
             "pdf_documents_no_match": sum(1 for item in pdf_results if item.get("pdf_documents_no_match")),
             "pdf_documents_with_claims": sum(1 for item in pdf_results if item.get("pdf_documents_with_claims")),
             "pdf_documents_failed": sum(1 for item in pdf_results if item.get("status") == "technical_repair"),
+            "pdf_documents_pending_live_processing": sum(1 for item in pdf_results if item.get("status") == "pending_live_processing"),
             "mapper_calls": sum((1 + item.retries) for item in final_provision if item.llm_call),
             "mapper_cache_hits": sum(1 for item in final_provision if item.cache_hit),
             "reviewer_calls": sum(1 for item in final_provision if getattr(item, "reviewer_llm_call", False)),

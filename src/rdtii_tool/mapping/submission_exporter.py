@@ -394,8 +394,9 @@ def _write_workbook(path: Path, sheets: list[tuple[str, list[str], list[dict[str
             'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
         )
     for rel_path in sheet_rels:
+        rel_part_name = rel_path.replace("\\", "/")
         content_types.append(
-            f'<Override PartName="/{rel_path.replace("\\\\", "/")}" '
+            f'<Override PartName="/{rel_part_name}" '
             'ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
         )
     content_types.append("</Types>")

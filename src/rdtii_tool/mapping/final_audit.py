@@ -91,12 +91,18 @@ def run_final_audit(project_root: Path, economy: str, pillars: set[int]) -> dict
     submission_dir = Path(project_root) / "outputs" / "corpus" / economy / "submission"
     if pillars == {4}:
         submission_dir = submission_dir / "p4"
-    submission_dir.mkdir(parents=True, exist_ok=True)
     registry = load_legal_inventory_registry(project_root)
     human_decisions = _load_human_decisions(submission_dir / "human_decisions.jsonl")
     source_rows, canonical_rows = _load_prefinal_rows(
         submission_dir, economy, human_decisions, scope_slug=scope_slug
     )
+    if not source_rows or not canonical_rows:
+        raise RuntimeError(
+            "final-audit requires non-empty completed local submission input. "
+            f"Expected {submission_dir / 'final_rows.jsonl'} or "
+            f"{submission_dir / f'{economy}_{scope_slug}.json'}. "
+            "The release package contains final_submit CSV/JSON only and cannot be re-audited."
+        )
     review_rows = _load_jsonl(submission_dir / "human_review.jsonl")
     framework_conclusions = _load_framework_conclusions(
         submission_dir / "framework_conclusions.json"
@@ -219,7 +225,14 @@ def _load_prefinal_rows(
     if final_rows_path.exists():
         canonical_rows = _load_canonical_final_rows(final_rows_path, human_decisions)
         return [row["row"] for row in canonical_rows], canonical_rows
-    source_rows = _load_submission_rows(submission_dir / f"{economy}_{scope_slug}.json")
+    source_path = submission_dir / f"{economy}_{scope_slug}.json"
+    if not source_path.exists():
+        raise RuntimeError(
+            "final-audit prefinal input missing. "
+            f"Expected {final_rows_path} or {source_path}. "
+            "Do not use final_submit P4/P6/P7 release files as final-audit input."
+        )
+    source_rows = _load_submission_rows(source_path)
     return source_rows, _build_canonical_rows(economy, source_rows, human_decisions)
 
 
@@ -1243,7 +1256,7 @@ def _global_cache_key(*, economy: str, scope: str, chunk_index: int, dataset_has
 
 def _chunk_rows(rows: list[dict], char_budget: int) -> list[list[dict]]:
     if not rows:
-        return [[]]
+        return []
     chunks: list[list[dict]] = []
     current: list[dict] = []
     current_size = 0
