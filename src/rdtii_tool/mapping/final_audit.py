@@ -91,18 +91,13 @@ def run_final_audit(project_root: Path, economy: str, pillars: set[int]) -> dict
     submission_dir = Path(project_root) / "outputs" / "corpus" / economy / "submission"
     if pillars == {4}:
         submission_dir = submission_dir / "p4"
+    submission_dir.mkdir(parents=True, exist_ok=True)
     registry = load_legal_inventory_registry(project_root)
     human_decisions = _load_human_decisions(submission_dir / "human_decisions.jsonl")
     source_rows, canonical_rows = _load_prefinal_rows(
         submission_dir, economy, human_decisions, scope_slug=scope_slug
     )
-    if not source_rows or not canonical_rows:
-        raise RuntimeError(
-            "final-audit requires non-empty completed local submission input. "
-            f"Expected {submission_dir / f'{economy}_{scope_slug}.json'}. "
-            "The release package contains final_submit CSV/JSON only and cannot be re-audited."
-        )
-    review_rows = _load_jsonl(submission_dir / "human_review.jsonl")
+    review_rows = _load_final_audit_review_rows(submission_dir, scope_slug=scope_slug)
     framework_conclusions = _load_framework_conclusions(
         submission_dir / "framework_conclusions.json"
     )
@@ -220,15 +215,62 @@ def _load_prefinal_rows(
     *,
     scope_slug: str = "p6_p7",
 ) -> tuple[list[dict[str, str]], list[dict]]:
+    snapshot_path = submission_dir / f"final_audit_input_{scope_slug}.json"
+    if snapshot_path.exists():
+        source_rows = _load_submission_rows(snapshot_path)
+        if not source_rows:
+            raise RuntimeError(f"final-audit input snapshot is empty: {snapshot_path}")
+        return source_rows, _build_canonical_rows(economy, source_rows, human_decisions)
+
     source_path = submission_dir / f"{economy}_{scope_slug}.json"
-    if not source_path.exists():
-        raise RuntimeError(
-            "final-audit prefinal input missing. "
-            f"Expected {source_path}. "
-            "Do not use final_submit P4/P6/P7 release files as final-audit input."
-        )
     source_rows = _load_submission_rows(source_path)
+    if not source_rows:
+        raise RuntimeError(f"final-audit prefinal input missing or empty: {source_path}")
+    snapshot_path.write_text(json.dumps(source_rows, ensure_ascii=False, indent=2), encoding="utf-8")
     return source_rows, _build_canonical_rows(economy, source_rows, human_decisions)
+
+
+def _load_final_audit_review_rows(submission_dir: Path, *, scope_slug: str = "p6_p7") -> list[dict]:
+    snapshot_path = submission_dir / f"final_audit_human_review_input_{scope_slug}.jsonl"
+    if snapshot_path.exists():
+        return _load_jsonl(snapshot_path)
+    review_path = submission_dir / "human_review.jsonl"
+    rows = _load_jsonl(review_path)
+    _write_jsonl(snapshot_path, rows)
+    return rows
+
+
+def _load_canonical_final_rows(path: Path, human_decisions: dict[str, dict]) -> list[dict]:
+    rows: list[dict] = []
+    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        payload = json.loads(line)
+        row = payload.get("row") if isinstance(payload, dict) else None
+        if not isinstance(row, dict):
+            raise RuntimeError(f"final_rows.jsonl row {line_no} missing row object: {path}")
+        clean = {column: str(row.get(column) or "") for column in SUBMISSION_COLUMNS}
+        review_key = str(payload.get("review_key") or "").strip()
+        human_decision = human_decisions.get(review_key) if review_key else None
+        if human_decision and str(human_decision.get("decision")).casefold() == "reject":
+            continue
+        payload = dict(payload)
+        payload["row"] = clean
+        payload["audit_key"] = str(payload.get("audit_key") or _audit_key(clean))
+        payload["review_key"] = review_key
+        payload["evidence_hash"] = str(payload.get("evidence_hash") or _row_evidence_hash(clean))
+        payload["stable_identity"] = str(payload.get("stable_identity") or _stable_identity(clean, review_key))
+        payload["human_protected"] = bool(human_decision and str(human_decision.get("decision")).casefold() == "accept")
+        if payload["human_protected"]:
+            payload["decision_source"] = "human"
+            payload["row"]["Confidence"] = "1.00"
+        else:
+            payload["decision_source"] = str(payload.get("decision_source") or "existing_pipeline")
+        payload["citation_status"] = str(payload.get("citation_status") or "verified")
+        payload["provenance"] = list(payload.get("provenance") or [])
+        payload["merged_from"] = list(payload.get("merged_from") or [])
+        rows.append(payload)
+    return rows
 
 
 def _deduplicate_rows(rows: list[dict]) -> tuple[list[dict], list[dict]]:
@@ -1136,6 +1178,13 @@ def _append_jsonl(path: Path, row: dict) -> None:
         handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
 
 
+def _write_jsonl(path: Path, rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+
+
 def _write_summary(submission_dir: Path, summary: dict) -> None:
     (submission_dir / "final_audit_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -1218,7 +1267,7 @@ def _global_cache_key(*, economy: str, scope: str, chunk_index: int, dataset_has
 
 def _chunk_rows(rows: list[dict], char_budget: int) -> list[list[dict]]:
     if not rows:
-        return []
+        return [[]]
     chunks: list[list[dict]] = []
     current: list[dict] = []
     current_size = 0
